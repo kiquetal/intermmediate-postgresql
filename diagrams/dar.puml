@@ -1,0 +1,40 @@
+@startuml
+' uncomment the line below if you're using computer with a retina display
+' skinparam dpi 300
+!define Table(name,desc) class name as "desc" << (T,#FFAAAA) >>
+' we use bold for primary key
+' green color for unique
+' and underscore for not_null
+!define primary_key(x) <b>x</b>
+!define foreign_key(x) <u>x</u>
+!define unique(x) <color:blue>x</color>
+!define not_null(x) <u>x</u>
+' other tags available:
+' <i></i>
+' <back:COLOR></color>, where color is a color name or html color code
+' (#FFAACC)
+' see: http://plantuml.com/classes.html#More
+hide methods
+hide stereotypes
+
+' entities
+
+' relationships
+
+    Table(account,"account") {
+    primary_key(id) SERIAL,
+    email VARCHAR[25],
+    created_at DATE NOT NULL DEFAULT NOW[],
+    updated_at DATE NOT NULL DEFAULT NOW[],
+    }
+    Table(post,"post") {
+    primary_key(id) SERIAL,
+    title VARCHAR[25],
+    content VARCHAR[1024],
+    foreign_key(account_id) INTEGER REFERENCES account[id] on DELETE CASCADE;
+    created_at DATE NOT NULL DEFAULT NOW[],
+    updated_at DATE NOT NULL DEFAULT NOW[],
+    }
+
+  account "1" --> "*" post  : "Varios posts"
+@enduml
