@@ -26,7 +26,9 @@ count INTEGER, rating INTEGER, len INTEGER);
 
     \copy xy_raw(x,y) FROM 'file.csv' WITH Delimiter ',';
 
-    psql -h pg.pg4e.com -p 5432 -U pg4e_a61622bae1 -c "\COPY track_raw(title,artist,album,count,rating,len) FROM 'library.csv' WITH DELIMITER ',' CSV " -d pg4e_a61622bae1
+    psql -h pg.pg4e.com -p 5432 -U pg4e_a61622bae1 -c "\COPY track_raw(title,artist,album,count,rating,len) FROM 'library_2.csv' WITH DELIMITER ',' CSV " -d pg4e_a61622bae1
+
+    psql -h pg.pg4e.com -p 5432 -U pg4e_a61622bae1 -c "\COPY track(title,artist,album,count,rating,len) FROM 'library_2.csv' WITH DELIMITER ',' CSV " -d pg4e_a61622bae1
 
     psql -h pg.pg4e.com -p 5432 -U pg4e_a61622bae1 -c "\copy unesco_raw(name,description,justification,year,longitude,latitude,area_hectares,category,state,region,iso) FROM 'whc-sites-2018-small.csv' WITH DELIMITER ',' CSV HEADER;" -d pg4e_a61622bae1
 
@@ -52,7 +54,7 @@ count INTEGER, rating INTEGER, len INTEGER);
     from the track_raw table to the track table, 
     effectively dropping the artist and album text fields.
     
-    3) INSERT INTO track(title,album_id,len) SELECT title,album_id,len from track_raw;
+    3) INSERT INTO track(title,album_id,len,artist_id) SELECT title,album_id,artist_id ,len from track_raw;
     To grade this assignment, the auto-grader will run a query like this on your database and look for the data it expects to see:
     
     SELECT track.title, album.title
@@ -112,6 +114,23 @@ To grade this assignment, the program will run a query like this on your databas
 
     Solution 1
 
-    CREATE TABLE category (id SERIAL, name VARCHAR(128), primary key(id))
-    CREATE TABLE iso (id SERIAL, name VARCHAR(128), primary key(id))
-    CREATE TABLE region (id SERIAL, name VARCHAR(128), primary key(id))
+    CREATE TABLE category (id SERIAL, name VARCHAR(128), primary key(id));
+    CREATE TABLE iso (id SERIAL, name VARCHAR(128), primary key(id));
+    CREATE TABLE region (id SERIAL, name VARCHAR(128), primary key(id));
+    CREATE TABLE state (id SERIAL, name VARCHAR(128), primary key(id));
+
+       UPDATE unesco_raw SET region_id = (SELECT id from region WHERE region.name = unesco_raw.region);
+       UPDATE unesco_raw SET iso_id = (SELECT id from iso WHERE iso.name = unesco_raw.iso);
+       UPDATE unesco_raw SET category_id = (SELECT id from category WHERE category.name = unesco_raw.category);
+       UPDATE unesco_raw SET state_id = (SELECT id from state WHERE state.name = unesco_raw.state);
+
+      pg4e_a61622bae1=> ALTER TABLE unesco_raw ADD CONSTRAINT region_fk foreign key(region_id) references region(id) ;
+      ALTER TABLE
+      pg4e_a61622bae1=> ALTER TABLE unesco_raw ADD CONSTRAINT iso_fk foreign key(iso_id) references iso(id) ;
+      ALTER TABLE
+      pg4e_a61622bae1=> ALTER TABLE unesco_raw ADD CONSTRAINT category_fk foreign key(category_id) references category(id) ;
+
+
+      INSERT INTO unesco(name,description,year,longitude,latitude,area_hectares,category_id,state_id,region_id,iso_id) SELECT (name,description,year,longitude,latitude,area_hectares,category_id,state_id,region_id,iso_id) FROM unesco_raw;
+
+
